@@ -1,118 +1,149 @@
 import tkinter as tk
-from tkinter import filedialog, ttk,simpledialog,Toplevel,messagebox
+from tkinter import filedialog, ttk
+from leerbasededatosexcelycsv import read
+from error_nan import crear_data_frame_entero, calcular_regresion2
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
-from error_nan import crear_data_frame_entero,calcular_regresion2
-from leerbasededatosexcelycsv import read
-import json
-#from guardar_modelo import guardar_modelo, mostrar_detalles_modelo  
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-
- 
-
-
-# Declara datos como variable global
-datos = None
-
-# Variables para almacenar las columnas X e Y
 colx_vars = []
 coly_var = None
-modelos_guardados = {}
-ruta_archivo = None
 
+def on_canvas_configure(canvas):
+    canvas.configure(scrollregion=canvas.bbox("all"))
 
 def cargar_y_visualizar_datos():
-    global datos, ruta_archivo
+    global datos, ruta_archivo, tree_frame, tree, colx_vars, coly_var
+
     archivo = filedialog.askopenfilename()
     if archivo:
-        ruta_archivo.set(archivo)  # Actualiza la variable ruta_archivo
+        ruta_archivo.set(archivo)
         datos = read(archivo)
+
         # Mostrar las columnas en la consola
         print("Columnas disponibles:")
         print(datos.columns)
 
-        # Actualiza el widget Text con las primeras filas del DataFrame
-        text_widget.delete(1.0, tk.END)  # Borra el contenido actual
-        text_widget.insert(tk.END, datos.to_string(index=False))
+        # Crear el marco para el Treeview
+        tree_frame = ttk.Frame(root)
+        tree_frame.grid(row=4, column=0, sticky="nsew", padx=10, pady=10)
+        
+        # Crear la barra de desplazamiento horizontal
+        scrollbar_x = ttk.Scrollbar(tree_frame, orient="horizontal")
+        scrollbar_x.grid(row=1, column=0, sticky="ew")
 
-        # Limpiar las columnas anteriores
-        for widget in frame_x.winfo_children():
-            widget.destroy()
-        for widget in frame_y.winfo_children():
-            widget.destroy()
+        # Crear un Canvas para permitir el desplazamiento
+        canvas = tk.Canvas(tree_frame, width=700, height=240, xscrollcommand=scrollbar_x.set)
+        canvas.grid(row=0, column=0, sticky="nsew")
+
+        # Crear el Treeview sin altura fija
+        tree = ttk.Treeview(canvas, columns=tuple(datos.columns))
+
+        # Configurar el ancho de la columna del índice
+        tree.column("#0", width=50, anchor=tk.CENTER)
+
+        # Configurar el ancho de las columnas
+        for col in datos.columns:
+            tree.heading(col, text=col)
+            tree.column(col, width=100, anchor=tk.CENTER)
+
+        # Insertar los datos en el Treeview
+        for i, row in datos.iterrows():
+            tree.insert("", i, text=str(i), values=tuple(row))
+
+        # Mostrar el Treeview en el Canvas
+        canvas.create_window((0, 0), window=tree, anchor="nw")
+ 
+ 
+
+        # Configurar el evento para ajustar el área de desplazamiento cuando cambie el tamaño del lienzo
+        canvas.bind("<Configure>", lambda event, canvas=canvas: on_canvas_configure(canvas))
+
+        # Configurar la barra de desplazamiento horizontal
+        scrollbar_x.config(command=canvas.xview)
+        canvas.config(xscrollcommand=scrollbar_x.set)
+
+        # Configurar el tamaño mínimo de la ventana
+        root.minsize(200, 200)
+
+      
 
         # Crear checkboxes para seleccionar múltiples columnas X
-        global colx_vars, coly_var
         coly_var = tk.StringVar()
         coly_var.set(datos.columns[0])  # Establecer el valor predeterminado como la primera columna
 
         # Contenedor para las columnas X
-        label_x = tk.Label(frame_x, text="COLUMNAS X")
-        label_x.grid(row=0, column=0)
+        frame_x = tk.Frame(root)
+        frame_x.place(x=150, y=310)
+
+        label_x = tk.Label(frame_x, text="Columna X")
+        label_x.grid(row=1, column=0)
+
+        canvas_x = tk.Canvas(frame_x, height=30)
+        canvas_x.grid(row=1, column=2)
+
+        inner_frame_x = tk.Frame(canvas_x)
+        canvas_x.create_window((0, 0), window=inner_frame_x, anchor="nw")
+
+        # Lista para almacenar las variables de las casillas de verificación de las columnas X
+        colx_vars = []
 
         for i, col in enumerate(datos.columns):
             var = tk.BooleanVar()
             colx_vars.append((col, var))
-            checkbox_x = tk.Checkbutton(frame_x, text=col, variable=var)
-            checkbox_x.grid(row=i + 1, column=0)
+            checkbox_x = tk.Checkbutton(inner_frame_x, text=col, variable=var, command=columnas_seleccionadas)
+            checkbox_x.grid(row=0, column=i, sticky="w")
+
+        inner_frame_x.update_idletasks()
+        canvas_x.configure(scrollregion=canvas_x.bbox("all"))
+
+        # Añadir barra de desplazamiento horizontal para Columna X
+        scrollbar_x = ttk.Scrollbar(frame_x, orient="horizontal", command=canvas_x.xview)
+        scrollbar_x.grid(row=2, column=1, columnspan=len(datos.columns), sticky="ew")
+        canvas_x.configure(xscrollcommand=scrollbar_x.set)
 
         # Contenedor para la columna Y
-        label_y = tk.Label(frame_y, text="COLUMNA Y")
-        label_y.grid(row=0, column=0)
+        frame_y = tk.Frame(root)
+        frame_y.place(x=150, y=370)
+
+        label_y = tk.Label(frame_y, text="Columna Y")
+        label_y.grid(row=1, column=0)
+
+        canvas_y = tk.Canvas(frame_y, height=30)
+        canvas_y.grid(row=1, column=1)
+
+        inner_frame_y = tk.Frame(canvas_y)
+        canvas_y.create_window((0, 0), window=inner_frame_y, anchor="nw")
 
         for i, col in enumerate(datos.columns):
-            radio_button_y = tk.Radiobutton(frame_y, text=col, variable=coly_var, value=col)
-            radio_button_y.grid(row=i + 1, column=0)
+            radio_button_y = tk.Radiobutton(inner_frame_y, text=col, variable=coly_var, value=col)
+            radio_button_y.grid(row=0, column=i, sticky="w")
 
+        inner_frame_y.update_idletasks()
+        canvas_y.configure(scrollregion=canvas_y.bbox("all"))
 
-def crear_modelo_regresion():
-    cargar_y_visualizar_datos()
+        # Añadir barra de desplazamiento horizontal para Columna Y
+        scrollbar_y = ttk.Scrollbar(frame_y, orient="horizontal", command=canvas_y.xview)
+        scrollbar_y.grid(row=2, column=1, columnspan=len(datos.columns), sticky="ew")
+        canvas_y.configure(xscrollcommand=scrollbar_y.set)
+        
+def columnas_seleccionadas():
+    global colx_vars, coly_var, cargar_regresion, cargar_boton
 
-def guardar_modelo():
-    global modelos_guardados, nombre_modelo, modelo_g
-
-    if nombre_modelo and modelo_g:
-        # Guarda el modelo en el diccionario
-        modelos_guardados[nombre_modelo] = modelo_g
-
-        # Guarda el diccionario en un archivo JSON
-        with open("modelos_guardados.json", "w") as f:
-            json.dump(modelos_guardados, f)
-        print("Modelo guardado exitosamente.")
+    # Implementa la lógica para verificar si se han seleccionado columnas
+    columnas_x_seleccionadas = [col for col, var in colx_vars if var.get()]
+    if columnas_x_seleccionadas and coly_var.get():
+        # Al menos una columna X y una columna Y están seleccionadas
+        cargar_regresion.place(x=620, y=340)
+        cargar_boton.place(x=620, y=380)
     else:
-        print("No hay modelo para guardar.")
-
-def mostrar_detalles_modelo(nombre_modelo):
-    global modelos_guardados
-    modelo_g = modelos_guardados.get(nombre_modelo)
-
-    if modelo_g:
-        ventana_detalles = Toplevel(root)
-        ventana_detalles.title(f"Detalles del Modelo: {nombre_modelo}")
-
-        # Mostrar detalles en la nueva ventana
-        label_nombre = tk.Label(ventana_detalles, text=f"Nombre del Modelo: {nombre_modelo}")
-        label_nombre.pack()
-
-        label_columna_y = tk.Label(ventana_detalles, text=f"Columna Y seleccionada: {modelo_g[1]}")
-        label_columna_y.pack()
-
-        label_columnas_x = tk.Label(ventana_detalles, text=f"Columnas X seleccionadas: {', '.join(modelo_g[2])}")
-        label_columnas_x.pack()
-
-        label_r_squared = tk.Label(ventana_detalles, text=f"R^2: {modelo_g[4][0]}")
-        label_r_squared.pack()
-
-        label_condition_number = tk.Label(ventana_detalles, text=f"Condición: {modelo_g[4][1]}")
-        label_condition_number.pack()
-    else:
-        print(f"No se encontró el modelo con el nombre: {nombre_modelo}")
-
+        # No hay columnas X o no hay columna Y seleccionada
+        cargar_regresion.place_forget()
+        cargar_boton.place_forget()
 
 def creador_de_modelo():
-    global datos, colx_vars, coly_var, root, modelos_guardados, nombre_modelo, modelo_g
+    global datos, colx_vars, coly_var, root, modelos_guardados, modelo_g
 
     # Obtener las columnas seleccionadas
     columnas_x_seleccionadas = [col for col, var in colx_vars if var.get()]
@@ -122,116 +153,22 @@ def creador_de_modelo():
     print(f"Se han seleccionado las columnas X: {columnas_x_seleccionadas}")
     print(f"Se ha seleccionado la columna Y: {columna_y_seleccionada}")
 
-    # Solicitar al usuario que ingrese un nombre para el modelo desde la interfaz
-    nombre_modelo = simpledialog.askstring("Nombre del Modelo", "Ingrese un nombre para el modelo:")
-
-    if nombre_modelo and columnas_x_seleccionadas and columna_y_seleccionada:
+    if columnas_x_seleccionadas and columna_y_seleccionada:
         # Aquí puedes realizar las operaciones para calcular la regresión utilizando las columnas seleccionadas
-        modelo_g = calcular_regresion2(datos, columnas_x_seleccionadas, columna_y_seleccionada, nombre_modelo)
+        modelo_g = calcular_regresion2(datos, columnas_x_seleccionadas, columna_y_seleccionada)
 
-        # Mostrar la información en la interfaz gráfica
-        label_columnas_x = tk.Label(root, text=f"Columnas X seleccionadas: {', '.join(columnas_x_seleccionadas)}")
-        label_columnas_x.grid(row=4, column=0, columnspan=3, pady=10)
+        
+        label_resultados = tk.Label(root, text=f"R^2: {modelo_g[3][0]}, Condición: {modelo_g[3][1]}")
+        label_resultados.place(x=260,y=430)
 
-        label_columna_y = tk.Label(root, text=f"Columna Y seleccionada: {columna_y_seleccionada}")
-        label_columna_y.grid(row=5, column=0, columnspan=3, pady=10)
 
-        label_resultados = tk.Label(root, text=f"R^2: {modelo_g[4][0]}, Condición: {modelo_g[4][1]}")
-        label_resultados.grid(row=6, column=0, columnspan=3, pady=10)
-
-        # Botones en una fila superior
-        guardar_boton = tk.Button(button_frame, text='Guardar Modelo', command=guardar_modelo)
-        guardar_boton.grid(row=5, column=0, padx=5)
-
+        
         print("Modelo creado exitosamente.")
     else:
         print("Selecciona al menos una columna X y una columna Y antes de calcular la regresión.")
 
-  
-def actualizar_interfaz(modelo_g):
-    # Limpiar la información anterior
-    for widget in frame_info_modelo.winfo_children():
-        widget.destroy()
 
-    # Mostrar la información actualizada en la interfaz gráfica
-    label_nombre = tk.Label(frame_info_modelo, text=f"Nombre del Modelo: {modelo_g[0]}")
-    label_nombre.grid(row=0, column=0, pady=5)
-
-    label_columnas_x = tk.Label(frame_info_modelo, text=f"Columnas X seleccionadas: {', '.join(modelo_g[2])}")
-    label_columnas_x.grid(row=1, column=0, pady=5)
-
-    label_columna_y = tk.Label(frame_info_modelo, text=f"Columna Y seleccionada: {modelo_g[1]}")
-    label_columna_y.grid(row=2, column=0, pady=5)
-
-    label_r_squared = tk.Label(frame_info_modelo, text=f"R^2: {modelo_g[4][0]}")
-    label_r_squared.grid(row=3, column=0, pady=5)
-
-    label_condition_number = tk.Label(frame_info_modelo, text=f"Condición: {modelo_g[4][1]}")
-    label_condition_number.grid(row=4, column=0, pady=5)
-
-def mostrar_nombres_modelos():
-    global modelos_guardados
-
-    if modelos_guardados:
-        # Ocultar la ventana principal
-        root.withdraw()
-
-        # Crear una nueva ventana principal para mostrar los modelos guardados
-        ventana_modelos = Toplevel(root)
-        ventana_modelos.title("Modelos Guardados")
-
-        # Mostrar nombres de los modelos con botones para ver detalles
-        for nombre_modelo in modelos_guardados:
-            boton_modelo = tk.Button(ventana_modelos, text=nombre_modelo, command=lambda n=nombre_modelo: mostrar_detalles_modelo_seleccionado(n))
-            boton_modelo.pack()
-
-        # Botón de regreso
-        boton_atras = tk.Button(ventana_modelos, text='Atrás', command=lambda: [ventana_modelos.destroy(), root.deiconify()])
-        boton_atras.pack()
-
-    else:
-        # Mensaje si no hay modelos guardados
-        messagebox.showinfo("Modelos Guardados", "No hay modelos guardados.")
-
-def cargar_modelo_seleccionado(nombre_modelo):
-    global modelos_guardados
-
-    modelo_g = modelos_guardados.get(nombre_modelo)
-
-    if modelo_g:
-        # Mostrar detalles del modelo seleccionado
-        actualizar_interfaz(modelo_g)
-
-def mostrar_detalles_modelo_seleccionado(nombre_modelo):
-    global modelos_guardados
-
-    modelo_g = modelos_guardados.get(nombre_modelo)
-
-    if modelo_g:
-        ventana_detalles = Toplevel(root)
-        ventana_detalles.title(f"Detalles del Modelo: {nombre_modelo}")
-
-        # Mostrar detalles en la nueva ventana
-        label_nombre = tk.Label(ventana_detalles, text=f"Nombre del Modelo: {modelo_g[0]}")
-        label_nombre.pack()
-
-        label_columna_y = tk.Label(ventana_detalles, text=f"Columna Y seleccionada: {modelo_g[1]}")
-        label_columna_y.pack()
-
-        label_columnas_x = tk.Label(ventana_detalles, text=f"Columnas X seleccionadas: {', '.join(modelo_g[2])}")
-        label_columnas_x.pack()
-
-        label_r_squared = tk.Label(ventana_detalles, text=f"R^2: {modelo_g[4][0]}")
-        label_r_squared.pack()
-
-        label_condition_number = tk.Label(ventana_detalles, text=f"Condición: {modelo_g[4][1]}")
-        label_condition_number.pack()
-
- 
-        
-  
-
-def cargar_modelo():
+def grafica_modelo():
     global datos
     if datos is not None:
         # Selecciona las columnas X e Y
@@ -256,6 +193,7 @@ def cargar_modelo():
             y_pred = modelo.predict(x_test)
 
             # Crea la gráfica de regresión lineal
+            plt.figure(figsize=(6, 3))
             plt.scatter(x_test.iloc[:, 0], y_test, color='black')  # Solo se muestra la primera columna X para la gráfica
             plt.plot(x_test.iloc[:, 0], y_pred, color='blue', linewidth=3)
             plt.title('Regresión Lineal')
@@ -265,7 +203,7 @@ def cargar_modelo():
             # Integra la gráfica en la ventana principal
             canvas = FigureCanvasTkAgg(plt.gcf(), master=root)
             canvas.draw()
-            canvas.get_tk_widget().grid(row=0, column=4, rowspan=3)
+            canvas.get_tk_widget().place(x=80,y=480) # Ajusta el valor de padx según tus necesidades
 
             print("Modelo de regresión lineal cargado y visualizado.")
         else:
@@ -273,61 +211,43 @@ def cargar_modelo():
     else:
         print("Carga los datos antes de intentar cargar un modelo.")
 
-
-def hacer_prediccion():
-    pass
-
-
 # Configuración de la ventana principal
 root = tk.Tk()
-root.geometry("1200x950")
+
+screen_height = root.winfo_screenheight()
+
+# Define la posición x en 750
+x_position = 750
+
+# Calcula la posición y centrada verticalmente
+# Configura la posición de la ventana
+root.geometry(f"750x{screen_height}+{x_position}+0")
+
 root.title('Aplicación de Regresión Lineal')
-root.resizable(width=True, height=True)
+root.resizable(width=False, height=False)
 
- 
 
-# Etiqueta, entrada y botón para la ruta del archivo
+
 ruta_archivo = tk.StringVar()
 ruta_label = tk.Label(root, text="Ruta del archivo:")
-ruta_label.grid(row=0, column=0, pady=10, padx=10)
-
+ruta_label.place(x=10,y=10)
 ruta_entry = tk.Entry(root, textvariable=ruta_archivo, state="readonly", width=40)
-ruta_entry.grid(row=0, column=1, pady=5)
+ruta_entry.place(x=150,y=10)
 
 examinar_button = tk.Button(root, text='Examinar', command=lambda: cargar_y_visualizar_datos())
-examinar_button.grid(row=0, column=2, padx=5, pady=10)
+examinar_button.place(x=450,y=5)
 
-# Widget Text para mostrar los datos
-text_widget = tk.Text(root, height=10, width=150, wrap="none")
-text_widget.grid(row=1, column=0, columnspan=3, padx=10, pady=10)
-
-# Contenedor para las columnas X
-frame_x = tk.Frame(root)
-frame_x.grid(row=2, column=0, padx=10, pady=10)
-
-# Contenedor para la columna Y
-frame_y = tk.Frame(root)
-frame_y.grid(row=2, column=1, padx=10, pady=10)
-
-# Cuadro de botones para operaciones
 button_frame = tk.Frame(root)
 button_frame.grid(row=3, column=0, columnspan=3, pady=10)
 
+# Botón "Hacer Regresión"
+cargar_regresion = tk.Button(root, text='Hacer Regresión', command=creador_de_modelo)
+cargar_regresion.grid(row=7, column=0, columnspan=1, pady=10, sticky="nsew")
+cargar_regresion.grid_remove()
 
-
-cargar_boton = tk.Button(button_frame, text='Cargar Modelo', command=cargar_modelo)
-cargar_boton.grid(row=1, column=1, padx=10)
-
-cargar_regresion = tk.Button(button_frame, text='Hacer Regresión', command=creador_de_modelo)
-cargar_regresion.grid(row=1, column=2, padx=10)
-
-boton_prediccion = tk.Button(button_frame, text='Hacer Predicción', command=hacer_prediccion)
-boton_prediccion.grid(row=1, column=3, padx=10)
-
-# Botón para ver modelos guardados
-ver_modelos_boton = tk.Button(button_frame, text='Ver Modelos Guardados', command=mostrar_nombres_modelos)
-ver_modelos_boton.grid(row=1, column=4, padx=10)
-
-
+cargar_boton = tk.Button(root, text='Cargar Modelo', command=grafica_modelo)
+cargar_boton.grid(row=8, column=0,columnspan=1, padx=10,sticky="nsew")
+cargar_boton.grid_remove()
+  
 
 root.mainloop()
