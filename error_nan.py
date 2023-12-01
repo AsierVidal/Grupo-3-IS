@@ -14,11 +14,7 @@ def crear_data_frame_entero(data):
     return (datos)
 
 
-
 def calcular_regresion2(datos, columnas_x_seleccionadas, columna_y_seleccionada):
-    # Aplicar la función para manejar NaN
-    datos = crear_data_frame_entero(datos)
-
     # Resto del código sigue igual...
     X = datos[columnas_x_seleccionadas]
     y = datos[columna_y_seleccionada]
@@ -33,15 +29,24 @@ def calcular_regresion2(datos, columnas_x_seleccionadas, columna_y_seleccionada)
 
     # Creación del modelo utilizando matrices como en scikit-learn
     X_train = sm.add_constant(X_train, prepend=True)
-    modelo = sm.OLS(endog=y_train, exog=X_train)
-    modelo = modelo.fit()
+    modelo_sm = sm.OLS(endog=y_train, exog=X_train)
+    modelo_resultado = modelo_sm.fit()
 
-    print('\n', modelo.rsquared, modelo.condition_number)
-    parametros = list(modelo.params)
+    print('\n', modelo_resultado.rsquared, modelo_resultado.condition_number)
+    parametros = list(modelo_resultado.params)
 
     cols_x_dict = {}
-    modelo_g = [columna_y_seleccionada, cols_x_dict, parametros[0], [modelo.rsquared, modelo.condition_number]]
     for i in range(1, len(parametros)):
         cols_x_dict[columnas_x_seleccionadas[i - 1]] = parametros[i]
+
+    # Crear una instancia de la clase Modelo
+    modelo_g = Modelo(
+        nombre="nombre_modelo",  # Reemplaza con el nombre que desees
+        descripcion="descripcion_modelo",  # Reemplaza con la descripción que desees
+        parametros_ajuste=parametros[0],
+        cols_x_dict=cols_x_dict,
+        coly=columna_y_seleccionada,
+        const=modelo_resultado.rsquared  # Puedes ajustar esto según tus necesidades
+    )
 
     return modelo_g
