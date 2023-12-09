@@ -45,3 +45,22 @@ def calcular_regresion2(datos, columnas_x_seleccionadas, columna_y_seleccionada)
         cols_x_dict[columnas_x_seleccionadas[i - 1]] = parametros[i]
 
     return modelo_g
+
+def escribir_ecuacion2(modelo_datos):
+    text=''
+    text += 'Porcentaje explicado:' + str(modelo_datos[3][0]) + ' Error cometido al cuadrado:' + str(modelo_datos[3][1]) + '\n'
+    text += str(modelo_datos[0]) + ' = '
+    list_keys = []
+    for i in modelo_datos[1]:
+        list_keys.append(i)
+        if len(list_keys) == 1:
+            text += str(modelo_datos[1][i]) + ' * ' + str(i) + ' '
+        else:
+            if modelo_datos[1][i] >= 0:
+                text += ' + '
+            text += str(modelo_datos[1][i]) + ' * ' +  str(i)
+    if modelo_datos[2] < 0:
+        text += str(modelo_datos[2])
+    else:
+        text += ' + ' + str(modelo_datos[2])
+    return text
