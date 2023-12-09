@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog, ttk
 from leerbasededatosexcelycsv import read
-from error_nan import crear_data_frame_entero, calcular_regresion2
+from error_nan import crear_data_frame_entero, calcular_regresion2, escribir_ecuacion2
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
@@ -156,10 +156,10 @@ def creador_de_modelo():
     if columnas_x_seleccionadas and columna_y_seleccionada:
         # Aquí puedes realizar las operaciones para calcular la regresión utilizando las columnas seleccionadas
         modelo_g = calcular_regresion2(datos, columnas_x_seleccionadas, columna_y_seleccionada)
-
+        text = escribir_ecuacion2(modelo_g)
         
-        label_resultados = tk.Label(root, text=f"R^2: {modelo_g[3][0]}, Condición: {modelo_g[3][1]}")
-        label_resultados.place(x=260,y=430)
+        label_resultados = tk.Label(root, text=text)
+        label_resultados.place(x=140,y=430)
 
 
         
