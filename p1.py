@@ -245,7 +245,7 @@ cargar_regresion = tk.Button(root, text='Hacer Regresión', command=creador_de_m
 cargar_regresion.grid(row=7, column=0, columnspan=1, pady=10, sticky="nsew")
 cargar_regresion.grid_remove()
 
-cargar_boton = tk.Button(root, text='Cargar Modelo', command=grafica_modelo)
+cargar_boton = tk.Button(root, text='Gráfica Modelo', command=grafica_modelo)
 cargar_boton.grid(row=8, column=0,columnspan=1, padx=10,sticky="nsew")
 cargar_boton.grid_remove()
   
