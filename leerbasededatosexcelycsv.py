@@ -38,6 +38,3 @@ def read(archivo):
 
     return data
 
-archivo = input('Introduce el archivo que deseas leer: ')
-data = read(archivo)
-print(data)
