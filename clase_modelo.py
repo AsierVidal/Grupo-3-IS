@@ -34,8 +34,4 @@ def guardar_texto_en_archivo(ruta, texto):
     except Exception as e:
         print(f"Error al guardar el texto en {ruta}: {e}")
 
-# Ejemplo de uso
-ruta_archivo = str(input("En que archivo quieres guardar el modelo?"))
-texto_a_guardar = ("amdaemfela")
 
-guardar_texto_en_archivo(ruta_archivo, texto_a_guardar)
