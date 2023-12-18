@@ -48,7 +48,7 @@ def calcular_regresion2(datos, columnas_x_seleccionadas, columna_y_seleccionada)
 
 def escribir_ecuacion2(modelo_datos):
     text=''
-    text += 'Porcentaje explicado:' + str(round(modelo_datos[3][0], 3)) + ' Error cometido al cuadrado:' + str(round(modelo_datos[3][1], 3)) + '\n'
+    text += 'Porcentaje explicado: ' + str(round(modelo_datos[3][0], 3)) + ' Error cometido: ' + str((round(modelo_datos[3][1], 3))**(1/2)) + '\n'
     text += str(modelo_datos[0]) + ' = '
     list_keys = []
     for i in modelo_datos[1]:
