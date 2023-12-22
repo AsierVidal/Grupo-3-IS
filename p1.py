@@ -1,29 +1,50 @@
 import tkinter as tk
 from tkinter import filedialog, ttk
 from leerbasededatosexcelycsv import read
-from error_nan import crear_data_frame_entero, calcular_regresion2, escribir_ecuacion2
+from error_nan import crear_data_frame_entero, calcular_regresion2,escribir_ecuacion2
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from clase_modelo import Modelo
+import statsmodels.api as sm
+import json
 
+# Otras variables globales
 colx_vars = []
 coly_var = None
+tree_frame = None 
+label_resultados = None 
+ruta_modelo = None
+canvas = None
+frame_x = None
+frame_y=None  # Agrega esta línea para definir frame_x como variable global
+
+
+
 
 def on_canvas_configure(canvas):
     canvas.configure(scrollregion=canvas.bbox("all"))
 
 def cargar_y_visualizar_datos():
-    global datos, ruta_archivo, tree_frame, tree, colx_vars, coly_var
+    global datos, ruta_archivo, tree_frame, tree, colx_vars, coly_var,frame_x,frame_y
 
-    archivo = filedialog.askopenfilename()
+    # Limpiar la interfaz antes de cargar nuevos datos
+    limpiar_interfaz()
+
+    archivo = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv"), ("Excel files", "*.xlsx;*.xls"), ("All files", "*.*")])
     if archivo:
-        ruta_archivo.set(archivo)
-        datos = read(archivo)
+        # Verificar si el archivo es un modelo guardado o un archivo de datos CSV/Excel
+        if archivo.lower().endswith(('.csv', '.xlsx', '.xls')):
+            # Cargar y visualizar datos CSV/Excel
+            ruta_archivo.set(archivo)
+            datos = read(archivo)
+            ruta_modelo=None
 
-        # Mostrar las columnas en la consola
-        print("Columnas disponibles:")
-        print(datos.columns)
+        elif archivo.lower().endswith('.txt'):
+            # Cargar un modelo previamente guardado
+            ruta_modelo = archivo  # Almacenar la ruta del modelo
+            cargar_modelo(archivo)
 
         # Crear el marco para el Treeview
         tree_frame = ttk.Frame(root)
@@ -127,7 +148,41 @@ def cargar_y_visualizar_datos():
         scrollbar_y = ttk.Scrollbar(frame_y, orient="horizontal", command=canvas_y.xview)
         scrollbar_y.grid(row=2, column=1, columnspan=len(datos.columns), sticky="ew")
         canvas_y.configure(xscrollcommand=scrollbar_y.set)
-        
+
+def limpiar_interfaz():
+    global tree_frame, cargar_regresion, guardar_boton, label_resultados, canvas, frame_x, frame_y
+
+    # Eliminar gráficas anteriores
+    if canvas:
+        canvas.get_tk_widget().destroy()
+        canvas = None
+
+    # Destruir el marco del Treeview si existe
+    if tree_frame is not None:
+        tree_frame.destroy()
+        tree_frame = None  # Establecer tree_frame a None después de destruirlo
+
+    if frame_x is not None:
+        frame_x.destroy()
+        frame_x = None
+
+    if frame_y is not None:
+        frame_y.destroy()
+        frame_y = None
+    # Ocultar el botón de regresión y el botón de guardar
+    cargar_regresion.grid_remove()
+    guardar_boton.grid_remove()
+
+    # Destruir el label de resultados si existe
+    if label_resultados is not None:
+        label_resultados.destroy()
+        label_resultados = None  # Establecer label_resultados a None después de destruirlo
+
+    # Borrar el label anterior, si existe
+    for widget in root.winfo_children():
+        if isinstance(widget, tk.Label):
+            widget.destroy()
+
 def columnas_seleccionadas():
     global colx_vars, coly_var, cargar_regresion, cargar_boton
 
@@ -136,40 +191,56 @@ def columnas_seleccionadas():
     if columnas_x_seleccionadas and coly_var.get():
         # Al menos una columna X y una columna Y están seleccionadas
         cargar_regresion.place(x=620, y=340)
-        cargar_boton.place(x=620, y=380)
     else:
         # No hay columnas X o no hay columna Y seleccionada
         cargar_regresion.place_forget()
-        cargar_boton.place_forget()
+
+def mostrar_interfaz_grafica():
+    global cargar_regresion, cargar_boton, modelo_g, label_resultados
+
+    # Mostrar el botón de graficar y guardar
+    guardar_boton.place(x=620, y=430)
+
+def guardar_modelo():
+    global modelo_g
+
+    # Utilizar un cuadro de diálogo para obtener la ruta del archivo
+    ruta_archivo = filedialog.asksaveasfilename(defaultextension=".txt", filetypes=[("Text files", "*.txt"), ("All files", "*.*")])
+
+    # Guardar el modelo en un archivo
+    if ruta_archivo:
+        modelo_g.guardar_modelo(ruta_archivo)
+
 
 def creador_de_modelo():
-    global datos, colx_vars, coly_var, root, modelos_guardados, modelo_g
-
+    global datos, colx_vars, coly_var, root, modelo_g
+    
     # Obtener las columnas seleccionadas
     columnas_x_seleccionadas = [col for col, var in colx_vars if var.get()]
     columna_y_seleccionada = coly_var.get()
 
-    # Mostrar las columnas X e Y en la consola
-    print(f"Se han seleccionado las columnas X: {columnas_x_seleccionadas}")
-    print(f"Se ha seleccionado la columna Y: {columna_y_seleccionada}")
+    
 
     if columnas_x_seleccionadas and columna_y_seleccionada:
         # Aquí puedes realizar las operaciones para calcular la regresión utilizando las columnas seleccionadas
         modelo_g = calcular_regresion2(datos, columnas_x_seleccionadas, columna_y_seleccionada)
         text = escribir_ecuacion2(modelo_g)
-        
+
+        # Crear el label sin colocarlo inmediatamente
         label_resultados = tk.Label(root, text=text)
-        label_resultados.place(x=140,y=430)
+        label_resultados.update_idletasks()  # Asegura que las medidas se actualicen
 
+        # Calcular la posición para centrar horizontalmente
+        x_position = (root.winfo_width() - label_resultados.winfo_reqwidth()) / 2
 
-        
-        print("Modelo creado exitosamente.")
-    else:
-        print("Selecciona al menos una columna X y una columna Y antes de calcular la regresión.")
+        # Colocar el label en el centro horizontal
+        label_resultados.place(x=x_position, y=430)
 
+        grafica_modelo()
+        mostrar_interfaz_grafica()
 
 def grafica_modelo():
-    global datos
+    global datos, canvas
     if datos is not None:
         # Selecciona las columnas X e Y
         columnas_x_seleccionadas = [col for col, var in colx_vars if var.get()]
@@ -203,13 +274,40 @@ def grafica_modelo():
             # Integra la gráfica en la ventana principal
             canvas = FigureCanvasTkAgg(plt.gcf(), master=root)
             canvas.draw()
-            canvas.get_tk_widget().place(x=80,y=480) # Ajusta el valor de padx según tus necesidades
+            canvas.get_tk_widget().place(x=80, y=480)  # Ajusta el valor de padx según tus necesidades
 
-            print("Modelo de regresión lineal cargado y visualizado.")
-        else:
-            print("Selecciona al menos una columna X y una columna Y antes de cargar el modelo.")
-    else:
-        print("Carga los datos antes de intentar cargar un modelo.")
+def cargar_modelo():
+    global modelo_g, ruta_modelo
+    limpiar_interfaz()
+    # Abrir el cuadro de diálogo para seleccionar un archivo
+    ruta_modelo = filedialog.askopenfilename(filetypes=[("Text files", "*.txt"), ("All files", "*.*")])
+
+    # Verificar si se ha seleccionado un modelo
+    if not ruta_modelo:
+        return None
+
+    try:
+        with open(ruta_modelo, 'r', encoding='utf-8') as archivo:
+            contenido_json = json.load(archivo)
+
+        # Crear una instancia del Modelo utilizando los datos del JSON
+        modelo_g = Modelo(
+            nombre=contenido_json["nombre"],
+            descripcion=contenido_json["descripcion"],
+            parametros_ajuste=contenido_json["parametros_ajuste"],
+            cols_x_dict=contenido_json["cols_x_dict"],
+            coly=contenido_json["coly"],
+            const=contenido_json["const"]
+        )
+
+        # Mostrar la interfaz gráfica para modelos
+        mostrar_interfaz_grafica()
+        creador_de_modelo()
+
+    except Exception as e:
+        print(f"Error al cargar el modelo desde {ruta_modelo}: {e}")
+
+
 
 # Configuración de la ventana principal
 root = tk.Tk()
@@ -226,16 +324,18 @@ root.geometry(f"750x{screen_height}+{x_position}+0")
 root.title('Aplicación de Regresión Lineal')
 root.resizable(width=False, height=False)
 
-
-
 ruta_archivo = tk.StringVar()
 ruta_label = tk.Label(root, text="Ruta del archivo:")
-ruta_label.place(x=10,y=10)
+ruta_label.place(x=10, y=10)
 ruta_entry = tk.Entry(root, textvariable=ruta_archivo, state="readonly", width=40)
-ruta_entry.place(x=150,y=10)
+ruta_entry.place(x=150, y=10)
 
 examinar_button = tk.Button(root, text='Examinar', command=lambda: cargar_y_visualizar_datos())
-examinar_button.place(x=450,y=5)
+examinar_button.place(x=450, y=5)
+
+# Crear el botón "Cargar Modelo"
+cargar_boton = tk.Button(root, text='Cargar Modelo', command=lambda: cargar_modelo())
+cargar_boton.place(x=550, y=5)
 
 button_frame = tk.Frame(root)
 button_frame.grid(row=3, column=0, columnspan=3, pady=10)
@@ -245,9 +345,11 @@ cargar_regresion = tk.Button(root, text='Hacer Regresión', command=creador_de_m
 cargar_regresion.grid(row=7, column=0, columnspan=1, pady=10, sticky="nsew")
 cargar_regresion.grid_remove()
 
-cargar_boton = tk.Button(root, text='Gráfica Modelo', command=grafica_modelo)
-cargar_boton.grid(row=8, column=0,columnspan=1, padx=10,sticky="nsew")
-cargar_boton.grid_remove()
-  
+# Crear el botón "Guardar Modelo"
+guardar_boton = tk.Button(root, text='Guardar Modelo', command=guardar_modelo)
+guardar_boton.grid(row=8, column=0, columnspan=1, padx=10, sticky="nsew")
+guardar_boton.grid_remove()
+
+
 
 root.mainloop()
