@@ -21,6 +21,6 @@ escoger las variables x que se utilizarán en la regresión, y otra fila que sol
 variable y de la regresión. Una vez elegidas se nos mostrará la ecuación de la regresión y la gráfica (siempre y cuando la gráfica
 sea en 2 o 3 dimensiones).
 
-Si se elige la opción de cargar un modelo creado previamente ya se mostrará directamente la información guardada en el mismo (gráfica,
-ecuación y variables elegidas). Además, se muestra una opción para hacer una predicción en base al modelo cargado, en la que el usuario
-tendrá que escoger valores para las columnas x y el programa devolverá el valor para la columna y.
+Si se elige la opción de cargar un modelo creado previamente ya se mostrará directamente la información guardada en el mismo. 
+Además, se muestra una opción para hacer una predicción en base al modelo cargado, en la que el usuario tendrá que escoger
+valores para las columnas x y el programa devolverá el valor para la columna y.
