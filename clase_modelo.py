@@ -6,36 +6,53 @@ class Modelo():
         self.cols_x_dict = cols_x_dict
         self.coly = coly
         self.const = const
+
+    def set_nombre(self, nuevo_nombre):
+        self.nombre = nuevo_nombre
     
-    def guardar_modelo(self):
-        archivo = open("mi_archivo.txt", "w", encoding="utf-8") #abre el archivo
+    def get_nombre(self):
+        return self.nombre
+    
+    def set_descripcion(self, nueva_descripcion):
+        self.descripcion = nueva_descripcion
+    
+    def get_descripcion(self):
+        return self.descripcion
+    
+    def set_parametros_ajuste(self, nuevos_parametros_ajuste):
+        self.parametros_ajuste = nuevos_parametros_ajuste
+    
+    def get_parametros_ajuste(self):
+        return self.parametros_ajuste
+    
+    def set_cols_x_dict(self, nuevas_cols_x_dict):
+        self.cols_x_dict = nuevas_cols_x_dict
+    
+    def get_cols_x_dict(self):
+        return self.cols_x_dict
+    
+    def set_coly(self, nueva_coly):
+        self.coly = nueva_coly
+    
+    def get_coly(self):
+        return self.coly
+    
+    def set_const(self, nueva_const):
+        self.const = nueva_const
+    
+    def get_const(self):
+        return self.const
+    
 
-        archivo.write(self.nombre,",") #escribe texto en el archivo
-
-        archivo.close() # cierra el archivo
-
-
-
-
-modelo = Modelo('m1','d1',[0.7,7],{'d1':7,'d2':8},'coly',3)
-
-
-"""archivo = open("mi_archivo.txt", "w", encoding="utf-8") #abre el archivo
-
-archivo.write(self.nombre,",",self.descripcion,",",) #escribe texto en el archivo
-
-archivo.close() # cierra el archivo"""
-
-def guardar_texto_en_archivo(ruta, texto):
-    try:
-        with open(ruta, 'w') as archivo:
-            archivo.write(texto)
-        print(f"Texto guardado correctamente en {ruta}")
-    except Exception as e:
-        print(f"Error al guardar el texto en {ruta}: {e}")
-
-# Ejemplo de uso
-ruta_archivo = str(input("En que archivo quieres guardar el modelo?"))
-texto_a_guardar = ("amdaemfela")
-
-guardar_texto_en_archivo(ruta_archivo, texto_a_guardar)
+    def guardar_modelo(self, ruta_archivo):
+        try:
+            with open(ruta_archivo, 'w', encoding='utf-8') as archivo:
+                archivo.write(f"Nombre: {self.nombre}\n")
+                archivo.write(f"Descripción: {self.descripcion}\n")
+                archivo.write(f"Parámetros de Ajuste: {self.parametros_ajuste}\n")
+                archivo.write(f"Columnas X: {self.cols_x_dict}\n")
+                archivo.write(f"Columna Y: {self.coly}\n")
+                archivo.write(f"Constante: {self.const}\n")
+        
+        except Exception as e:
+            print(f"Error al guardar el modelo en {ruta_archivo}: {e}")

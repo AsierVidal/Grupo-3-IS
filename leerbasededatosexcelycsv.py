@@ -23,11 +23,9 @@ def read(archivo):
         tables = [table[0] for table in cursor.fetchall()]
 
         if not tables:
-            print("La base de datos no contiene ninguna tabla.")
             data = read(archivo)
         else:
             table_name = tables[0]
-            print(f"Cargando datos de la tabla: {table_name}")
             data = pd.read_sql(f"SELECT * FROM {table_name}", connection)
             
             
@@ -38,6 +36,3 @@ def read(archivo):
 
     return data
 
-archivo = input('Introduce el archivo que deseas leer: ')
-data = read(archivo)
-print(data)
