@@ -85,16 +85,8 @@ def escribir_ecuacion2(modelo_datos):
     return text
 
 def predecir_nuevos_valores(modelo, nuevos_datos):
-    
-    constante_modelo = modelo.model.exog[0][0]
-
-    nuevos_datos = pd.DataFrame(data=nuevos_datos)
-    
-    nuevos_datos['const'] = constante_modelo
-
-    columnas_ordenadas = ['const'] + [col for col in nuevos_datos if col != 'const']
-    nuevos_datos = nuevos_datos[columnas_ordenadas]
-    print(nuevos_datos)
-    
-    predicciones = modelo.predict(nuevos_datos)
+    predicciones = 0
+    for i in nuevos_datos.keys():
+        predicciones += nuevos_datos[i] * modelo.get_cols_x_dict()[i]
+    predicciones += modelo.get_const()
     return predicciones
