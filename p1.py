@@ -16,7 +16,6 @@ import pandas as pd
 colx_vars = []
 coly_var = None
 tree_frame = None 
-label_resultados = None 
 ruta_modelo = None
 canvas = None
 frame_x = None
@@ -27,7 +26,6 @@ label_grafica = None
 frame_prediccion = None
 entradas_prediccion = []
 datos_prediccion = []
-
 variables_x_seleccionadas_label = None
 predicciones_label = None
 
@@ -53,23 +51,12 @@ def cargar_y_visualizar_datos():
             ruta_archivo.set(archivo)
             datos = read(archivo)
 
-         # Configure vertical scrollbar for the Canvas
-        scrollbar_y_main = ttk.Scrollbar(root, orient="vertical", command=canvas_main.yview)
-        scrollbar_y_main.grid(row=0, column=5, sticky="ns")
-
-
-            ruta_modelo=None
-
-        elif archivo.lower().endswith('.txt'):
-            # Cargar un modelo previamente guardado
-            ruta_modelo = archivo  # Almacenar la ruta del modelo
-            cargar_modelo(archivo)
-
 
          # Configure vertical scrollbar for the Canvas
         scrollbar_y_main = ttk.Scrollbar(root, orient="vertical", command=canvas_main.yview)
         scrollbar_y_main.grid(row=0, column=5, sticky="ns")
 
+      
 
         canvas_main.config(yscrollcommand=scrollbar_y_main.set)
 
@@ -242,7 +229,6 @@ def columnas_seleccionadas():
         # No hay columnas X o no hay columna Y seleccionada
         cargar_regresion.place_forget()
 
-
 def mostrar_interfaz_grafica():
     global cargar_regresion, cargar_boton, modelo_g, label_resultados
 
@@ -264,40 +250,6 @@ def obtener_datos_adicionales():
     dato2_var = tk.StringVar()
     dato2_entry = tk.Entry(ventana_datos, textvariable=dato2_var)
     dato2_entry.grid(row=1, column=1, padx=10, pady=5)
-
-
-
-
-def mostrar_interfaz_grafica():
-    global cargar_regresion, cargar_boton, modelo_g, label_resultados
-
-    # Mostrar el botón de graficar y ocultar el botón de guardar
-    guardar_boton.place(x=620, y=380)
-     
-
-def mostrar_interfaz_grafica():
-    global cargar_regresion, cargar_boton, modelo_g, label_resultados
-
-    # Mostrar el botón de graficar y ocultar el botón de guardar
-    guardar_boton.place(x=620, y=380)
-     
-     
-def obtener_datos_adicionales():
-    # Crea una nueva ventana emergente
-    ventana_datos = tk.Toplevel(root)
-    ventana_datos.title("Nombre y Descripción del modelo a guardar")
-
-    # Agrega etiquetas y cuadros de texto para obtener los datos
-    tk.Label(ventana_datos, text="Nombre:").grid(row=0, column=0, padx=10, pady=5)
-    dato1_var = tk.StringVar()
-    dato1_entry = tk.Entry(ventana_datos, textvariable=dato1_var)
-    dato1_entry.grid(row=0, column=1, padx=10, pady=5)
-
-    tk.Label(ventana_datos, text="Descripción:").grid(row=1, column=0, padx=10, pady=5)
-    dato2_var = tk.StringVar()
-    dato2_entry = tk.Entry(ventana_datos, textvariable=dato2_var)
-    dato2_entry.grid(row=1, column=1, padx=10, pady=5)
-
 
     # Función para obtener datos y luego llamar a guardar_modelo
     def obtener_datos_y_guardar_modelo():
@@ -347,39 +299,6 @@ def creador_de_modelo(cargar = None):
         columnas_x_seleccionadas = [col for col, var in colx_vars if var.get()]
         columna_y_seleccionada = coly_var.get()
 
-
-    # Guardar el modelo en un archivo
-    if ruta_archivo:
-        modelo_g.guardar_modelo(ruta_archivo)
-
-
-
-def creador_de_modelo(cargar = None):
-    global datos, colx_vars, coly_var, root, modelo_g, canvas, label_resultados, label_grafica, modelo_resultado, entradas_prediccion, frame_prediccion
-    # Oculta el botón "Guardar modelo" si existe
-    if guardar_boton:
-        guardar_boton.place_forget()
-    
-    if label_resultados:
-        label_resultados.destroy()   
-
-    # Destruye la gráfica anterior si existe
-    if canvas:
-        canvas.get_tk_widget().destroy()
-
-    if label_grafica:
-        label_grafica.destroy()
-
-    # if frame_prediccion:
-    #     frame_prediccion.destroy()
-
-    if cargar == None:
-        
-        # Obtener las columnas seleccionadas
-        columnas_x_seleccionadas = [col for col, var in colx_vars if var.get()]
-        columna_y_seleccionada = coly_var.get()
-
-
         if columnas_x_seleccionadas and columna_y_seleccionada:
             
             # Aquí puedes realizar las operaciones para calcular la regresión utilizando las columnas seleccionadas
@@ -412,7 +331,6 @@ def creador_de_modelo(cargar = None):
                 frame_prediccion = tk.Frame(main_frame)
                 frame_prediccion.grid(row=12, column=0, pady=(10, 0), sticky="nsew")  # Ajusta la posición según tus necesidades
 
-
                 tk.Label(frame_prediccion, text="Ingrese los valores para la predicción:").grid(row=0, column=0, columnspan=2)
 
                 entradas_prediccion = []
@@ -445,50 +363,6 @@ def creador_de_modelo(cargar = None):
         for k in modelo_g.cols_x_dict.keys():
             columnas_x_seleccionadas.append(k)
         columna_y_seleccionada = modelo_g.coly
-
-
-
-                tk.Label(frame_prediccion, text="Ingrese los valores para la predicción:").grid(row=0, column=0, columnspan=2)
-
-                entradas_prediccion = []
-                for i, col in enumerate(columnas_x_seleccionadas):
-                    tk.Label(frame_prediccion, text=f"{col}:").grid(row=i + 1, column=0)
-                    valor_var = tk.DoubleVar()
-                    entry_valor = tk.Entry(frame_prediccion, textvariable=valor_var)
-                    entry_valor.grid(row=i + 1, column=1)
-                    entradas_prediccion.append(valor_var)
-
-                # Botón para realizar la predicción
-                    
-                tk.Button(frame_prediccion, text='Realizar Predicción', command=realizar_prediccion).grid(row=len(columnas_x_seleccionadas) + 1, column=0, columnspan=2, pady=10)
-
-                tk.Button(frame_prediccion, text='Realizar Predicción', command=realizar_prediccion).grid(row=len(columnas_x_seleccionadas) + 1, column=0, columnspan=2, pady=10)
-
-
-            except ValueError:
-                text = 'Una de las columnas seleccionadas no tiene todos los datos en formato numérico'
-
-                label_resultados = tk.Label(main_frame, text=text)
-                label_resultados.update_idletasks()  # Asegura que las medidas se actualicen
-
-                # Calcular la posición para centrar horizontalmente
-                x_position = (root.winfo_width() - label_resultados.winfo_reqwidth()) / 2
-
-                # Colocar el label en el centro horizontal
-                label_resultados.place(x=x_position, y=440)
-
-
-    elif cargar == 'si':
-
-    elif cargar == 'si':
-
-        # Obtener las columnas seleccionadas
-        columnas_x_seleccionadas = []
-        for k in modelo_g.cols_x_dict.keys():
-            columnas_x_seleccionadas.append(k)
-        columna_y_seleccionada = modelo_g.coly
-
-
 
         if columnas_x_seleccionadas and columna_y_seleccionada:
             # Aquí puedes realizar las operaciones para calcular la regresión utilizando las columnas seleccionadas
@@ -547,74 +421,6 @@ def realizar_prediccion():
         valores_prediccion = [entry.get() for entry in entradas_prediccion]
     
         # Convertir los valores a números
-
-
-        if columnas_x_seleccionadas and columna_y_seleccionada:
-            # Aquí puedes realizar las operaciones para calcular la regresión utilizando las columnas seleccionadas
-            try:
-                text = escribir_ecuacion2(modelo_g)
-
-                # Crear el label sin colocarlo inmediatamente
-                label_resultados = tk.Label(root, text=text)
-                label_resultados.update_idletasks()  # Asegura que las medidas se actualicen
-
-                # Calcular la posición para centrar horizontalmente
-                x_position = (root.winfo_width() - label_resultados.winfo_reqwidth()) / 2
-
-                label_resultados.grid(row=9, column=0, pady=(10, 0), sticky="nsew")
-
-                guardar_boton.grid(row=10, column=0, pady=(10, 0), sticky="nsew")
-
-            
-            except ValueError:
-                text = 'Una de las columnas seleccionadas no tiene todos los datos en formato numérico'
-
-                label_resultados = tk.Label(root, text=text)
-                label_resultados.update_idletasks()  # Asegura que las medidas se actualicen
-
-                # Calcular la posición para centrar horizontalmente
-                x_position = (root.winfo_width() - label_resultados.winfo_reqwidth()) / 2
-
-                # Colocar el label en el centro horizontal
-                label_resultados.place(x=x_position, y=150)
-                
-                # Crear cuadros de entrada para la predicción
-                
-                frame_prediccion = tk.Frame(main_frame)
-                frame_prediccion.grid(row=12, column=0, pady=(10, 0), sticky="nsew")
-  # Ajusta la posición según tus necesidades
-
-                tk.Label(frame_prediccion, text="Ingrese los valores para la predicción:").grid(row=0, column=0, columnspan=2)
-
-                entradas_prediccion = []
-                for i, col in enumerate(columnas_x_seleccionadas):
-                   tk.Label(frame_prediccion, text=f"{col}:").grid(row=i + 1, column=0)
-                   valor_var = tk.DoubleVar()
-                   entry_valor = tk.Entry(frame_prediccion, textvariable=valor_var)
-                   entry_valor.grid(row=i + 1, column=1)
-                   entradas_prediccion.append(valor_var)
-
-                # Botón para realizar la predicción
-                tk.Button(frame_prediccion, text='Realizar Predicción', command=realizar_prediccion).grid(row=len(columnas_x_seleccionadas) + 1, column=0, columnspan=2, pady=10)
-                
-def realizar_prediccion():
-    global modelo_resultado, root, entradas_prediccion
-    
-
-    # Obtener las columnas seleccionadas
-    columnas_x_seleccionadas = [col for col, var in colx_vars if var.get()]
-
-    # Mostrar las variables X seleccionadas
-    variables_x_seleccionadas_label = tk.Label(main_frame, text=f"Variables X seleccionadas: {', '.join(columnas_x_seleccionadas)}")
-    variables_x_seleccionadas_label.place(x=400, y=920)
-
-    # Obtener los valores para la predicción desde las entradas del usuario
-    valores_prediccion = [entry.get() for entry in entradas_prediccion]
-    
-
-    # Convertir los valores a números
-    try:
-
         valores_prediccion = [float(valor) for valor in valores_prediccion]
     except ValueError:
         # Manejar errores de conversión
@@ -622,7 +428,6 @@ def realizar_prediccion():
         return
     
     datos_predicc = dict(zip(columnas_x_seleccionadas, valores_prediccion))
-
     
     # Realizar la predicción utilizando la función independiente
     predicciones = predecir_nuevos_valores(modelo_g, datos_predicc)
@@ -630,20 +435,6 @@ def realizar_prediccion():
     if predicciones is not None:
         # Mostrar las predicciones
         tk.messagebox.showerror("Predicción", modelo_g.get_coly() + str(round(predicciones, 3)))
-
-    # Guardar los datos de predicción en una lista (o cualquier otra estructura de datos que prefieras)
-    # En este ejemplo, se utiliza una lista para almacenar varios conjuntos de datos de predicción
-    datos_prediccion.append(datos_predicc)
-    
-    # Realizar la predicción utilizando la función independiente
-    predicciones = predecir_nuevos_valores(modelo_resultado, datos_prediccion)
-
-    if predicciones is not None:
-        # Mostrar las predicciones
-        predicciones_label = tk.Label(main_frame, text=f"Predicciones: {predicciones}")
-        predicciones_label.place(x=400, y=950)
-
-
 
 def on_label_configure(label):
     label.update_idletasks()
@@ -717,12 +508,6 @@ def grafica_modelo():
                  # Configure the event for adjusting the scroll area
                 root.bind("<Configure>", lambda event, canvas=canvas.get_tk_widget(): on_canvas_configure( canvas_main ))
             else:
-
-                
-                text = 'Gráfica no disponible para tantas variables'
-
-
-
                 text = 'Gráfica no disponible para tantas variables'
 
                 label_grafica = tk.Label(root, text=text)
@@ -734,19 +519,6 @@ def grafica_modelo():
                 # Colocar el label en el centro horizontal
                 label_grafica.place(x=x_position, y=500)
 
-                 # Create the FigureCanvasTkAgg object with a different variable name
-                
-                canvas_modelo = FigureCanvasTkAgg(plt.gcf(), master=main_frame)
-                canvas_modelo.draw()
-                 # Destroy the existing canvas if it exists
-                if canvas:
-                    canvas.get_tk_widget().destroy()
-
-                # Assign the new canvas to the global variable
-                canvas = canvas_modelo
-                 # Configure the event for adjusting the scroll area
-                root.bind("<Configure>", lambda event, canvas=canvas.get_tk_widget(): on_canvas_configure( canvas_main ))
-
 def cargar_modelo():
     global modelo_g, ruta_modelo, label_resultados, guardar_boton
     limpiar_interfaz()
@@ -756,12 +528,6 @@ def cargar_modelo():
     
     if label_resultados:
         label_resultados.destroy()   
-
-
-def cargar_modelo():
-    global modelo_g, ruta_modelo
-    limpiar_interfaz()
-
 
     # Abrir el cuadro de diálogo para seleccionar un archivo
     ruta_modelo = filedialog.askopenfilename(filetypes=[("Text files", "*.txt"), ("All files", "*.*")])
@@ -798,10 +564,6 @@ def cargar_modelo():
     except Exception as e:
         print(f"Error al cargar el modelo desde {ruta_modelo}: {e}")
 
-    except Exception as e:
-        print(f"Error al cargar el modelo desde {ruta_modelo}: {e}")
-
-
 
 # Configuración de la ventana principal
 root = tk.Tk()
@@ -816,7 +578,6 @@ root.geometry("980x500")
 root.title('Aplicación de Regresión Lineal')
 root.resizable(width=True, height=True)
 
-
 # Agregar un Canvas para permitir el desplazamiento vertical
 canvas_main = tk.Canvas(root,width=850, height=500)
 canvas_main.grid(row=0, column=0, sticky="nsew")
@@ -831,38 +592,6 @@ main_frame.grid_rowconfigure(0, weight=1)
 main_frame.grid_columnconfigure(0, weight=1)
 
 canvas_main.create_window((0, 0), window=main_frame, anchor="nw")
-
-
-# Agregar un Canvas para permitir el desplazamiento vertical
-canvas_main = tk.Canvas(root,width=850, height=500)
-canvas_main.grid(row=0, column=0, sticky="nsew")
-
-# Obtener la altura de la ventana principal
-root_height = root.winfo_reqheight()
-
-# Crear el marco principal para contener todos los elementos
-main_frame = tk.Frame(canvas_main, width=850, height=root_height)
-main_frame.grid(row=1, column=1, sticky="nsew")
-main_frame.grid_rowconfigure(0, weight=1)
-main_frame.grid_columnconfigure(0, weight=1)
-
-canvas_main.create_window((0, 0), window=main_frame, anchor="nw")
-
-# Agregar un Canvas para permitir el desplazamiento vertical
-canvas_main = tk.Canvas(root,width=850, height=500)
-canvas_main.grid(row=0, column=0, sticky="nsew")
-
-# Obtener la altura de la ventana principal
-root_height = root.winfo_reqheight()
-
-# Crear el marco principal para contener todos los elementos
-main_frame = tk.Frame(canvas_main, width=850, height=root_height)
-main_frame.grid(row=1, column=1, sticky="nsew")
-main_frame.grid_rowconfigure(0, weight=1)
-main_frame.grid_columnconfigure(0, weight=1)
-
-canvas_main.create_window((0, 0), window=main_frame, anchor="nw")
-
 
  
 
@@ -877,11 +606,6 @@ ruta_entry.place(x=150, y=10)
 
 examinar_button = tk.Button(root, text='Examinar', command=lambda: cargar_y_visualizar_datos())
 examinar_button.place(x=450, y=5)
-
-# Crear el botón "Cargar Modelo"
-cargar_boton = tk.Button(root, text='Cargar Modelo', command=lambda: cargar_modelo())
-cargar_boton.place(x=550, y=5)
-
 
 # Crear el botón "Cargar Modelo"
 cargar_boton = tk.Button(root, text='Cargar Modelo', command=lambda: cargar_modelo())
