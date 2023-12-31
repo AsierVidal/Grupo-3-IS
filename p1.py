@@ -508,13 +508,8 @@ def grafica_modelo():
                  # Configure the event for adjusting the scroll area
                 root.bind("<Configure>", lambda event, canvas=canvas.get_tk_widget(): on_canvas_configure( canvas_main ))
             else:
-
                 
                 text = 'Gráfica no disponible para tantas variables'
-
-                text = 'Gráfica no disponible para tantas variables'
-
-
                 label_grafica = tk.Label(root, text=text)
                 label_grafica.update_idletasks()  # Asegura que las medidas se actualicen
 
@@ -523,6 +518,19 @@ def grafica_modelo():
 
                 # Colocar el label en el centro horizontal
                 label_grafica.place(x=x_position, y=500)
+
+                 # Create the FigureCanvasTkAgg object with a different variable name
+                
+                canvas_modelo = FigureCanvasTkAgg(plt.gcf(), master=main_frame)
+                canvas_modelo.draw()
+                 # Destroy the existing canvas if it exists
+                if canvas:
+                    canvas.get_tk_widget().destroy()
+
+                # Assign the new canvas to the global variable
+                canvas = canvas_modelo
+                 # Configure the event for adjusting the scroll area
+                root.bind("<Configure>", lambda event, canvas=canvas.get_tk_widget(): on_canvas_configure( canvas_main ))
 
 def cargar_modelo():
     global modelo_g, ruta_modelo, label_resultados, guardar_boton
