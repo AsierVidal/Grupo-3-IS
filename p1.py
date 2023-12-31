@@ -508,7 +508,12 @@ def grafica_modelo():
                  # Configure the event for adjusting the scroll area
                 root.bind("<Configure>", lambda event, canvas=canvas.get_tk_widget(): on_canvas_configure( canvas_main ))
             else:
+
+                
                 text = 'Gráfica no disponible para tantas variables'
+
+                text = 'Gráfica no disponible para tantas variables'
+
 
                 label_grafica = tk.Label(root, text=text)
                 label_grafica.update_idletasks()  # Asegura que las medidas se actualicen
